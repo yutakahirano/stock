@@ -6,6 +6,7 @@ import re
 import math
 import mizuho
 
+
 class Transaction:
   sell = object()
   buy = object()
@@ -21,6 +22,7 @@ class Transaction:
     self.numShares = int(dict['NumShares'])
     self.marketValue = float(dict['MarketValue'])
 
+
 class Transactions:
   def __init__(self, data):
     self.currency = data['Currency']
@@ -33,9 +35,6 @@ class Transactions:
   def __getitem__(self, *args):
     return self.transactions.__getitem__(*args)
 
-class Context:
-  def __init__(self):
-    self.exchanger = mizuho.MizuhoCurrencyRate()
 
 class PurchaseReport:
   def __init__(self, transaction, ttm, currency):
@@ -44,13 +43,13 @@ class PurchaseReport:
     self.currency = currency
 
   def __str__(self):
-    return ('{0}: BUY {1} shares at {1} * {2} = {3}{4} = JPY{5}.'
-      .format(self.transaction.date,
-              self.transaction.numShares,
-              self.transaction.marketValue,
-              self.currency,
-              self.transaction.numShares * self.transaction.marketValue,
-              self.valueInJPY()))
+    return '{0}: BUY {1} shares at {1} * {2} = {3}{4} = JPY{5}.'.format(
+      self.transaction.date,
+      self.transaction.numShares,
+      self.transaction.marketValue,
+      self.currency,
+      self.transaction.numShares * self.transaction.marketValue,
+      self.valueInJPY())
 
   def valueInJPY(self):
     tx = self.transaction
@@ -65,6 +64,7 @@ class PurchaseReport:
   def numSharesDiff(self):
     return self.transaction.numShares
 
+
 class TransferReport:
   def __init__(self, transaction, tts, purchasePricePerShare, currency):
     self.transaction = transaction
@@ -74,16 +74,16 @@ class TransferReport:
 
   def __str__(self):
     tx = self.transaction
-    return ('{0}: SELL {1} shares at {1} * {2} = {3}{4} = JPY{5}. The purchase '
-            'price per share is JPY{6} and the transfer income is JPY{7}.'
-      .format(tx.date,
-              tx.numShares,
-              tx.marketValue,
-              self.currency,
-              tx.numShares * tx.marketValue,
-              tx.numShares * tx.marketValue * self.tts,
-              self.purchasePricePerShareInJPY,
-              self.transferIncomeInJPY()))
+    return ('{0}: SELL {1} shares at {1} * {2} = {3}{4} = JPY{5}. The '
+            'purchase price per share is JPY{6} and the transfer income '
+            'is JPY{7}.'.format(tx.date,
+                                tx.numShares,
+                                tx.marketValue,
+                                self.currency,
+                                tx.numShares * tx.marketValue,
+                                tx.numShares * tx.marketValue * self.tts,
+                                self.purchasePricePerShareInJPY,
+                                self.transferIncomeInJPY()))
 
   def earnedIncomeInJPY(self):
     return 0.0
@@ -95,6 +95,7 @@ class TransferReport:
 
   def numSharesDiff(self):
     return -self.transaction.numShares
+
 
 def load(filename):
   with open(filename, 'r') as f:
@@ -132,6 +133,7 @@ def reports(transactions, exchanger):
        totalValue -= math.ceil(tx.numShares * average)
   return reports
 
+
 def report(transactions, exchanger):
   print('===')
   numShares = 0
@@ -145,7 +147,7 @@ def report(transactions, exchanger):
       numShares += report.numSharesDiff()
 
     print('{0}: The earned income is JPY{1}, the transfer income is JPY{2}.'
-      .format(year, earnedIncomeInJPY, transferIncomeInJPY))
+          .format(year, earnedIncomeInJPY, transferIncomeInJPY))
     print('{0}: You have {1} shares at the end of year.'.format(
       year, numShares))
     print('====')

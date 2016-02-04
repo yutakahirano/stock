@@ -5,6 +5,7 @@ from unittest import TestCase
 from stock import *
 from datetime import date
 
+
 class TransactionTest(TestCase):
   def testCreate(self):
     txb = Transaction({'Date': datetime.date(2014, 1, 25),
@@ -119,10 +120,11 @@ class TransferReportTest(TestCase):
                       'MarketValue': 12})
     report = TransferReport(tx, 5, 44, 'USD')
     s = str(report)
-    assert (s == '2014-01-25: SELL 4 shares at 4 * 12.0 = USD48.0 = JPY240.0. '
-      'The purchase price per share is JPY44 and the transfer income is '
-      'JPY64.0.')
+    assert (s == '2014-01-25: SELL 4 shares at 4 * 12.0 = USD48.0 = '
+                 'JPY240.0. The purchase price per share is JPY44 and the '
+                 'transfer income is JPY64.0.')
     assert report.transferIncomeInJPY() == 64
+
 
 class FakeExchanger:
   def rate(self, src, dest, d):
@@ -169,7 +171,7 @@ Transactions:
     NumShares: 3
     Type: buy
   - Date: 2014-02-02
-    MarketValue: 1 
+    MarketValue: 1
     NumShares: 1
     Type: sell
   - Date: 2014-03-02
@@ -179,7 +181,7 @@ Transactions:
 '''
     rs = reports(Transactions(yaml.load(input)), FakeExchanger())
     assert len(rs) == 2
- 
+
     assert len(rs[2013]) == 5
     assert rs[2013][0].earnedIncomeInJPY() == 1000
     assert rs[2013][0].transferIncomeInJPY() == 0
@@ -197,4 +199,3 @@ Transactions:
     assert rs[2014][0].transferIncomeInJPY() == -332
     assert rs[2014][1].earnedIncomeInJPY() == 540
     assert rs[2014][1].transferIncomeInJPY() == 0
-

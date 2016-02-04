@@ -3,6 +3,7 @@ import datetime
 import requests
 import re
 
+
 class MizuhoCurrencyRate:
   def __init__(self):
     self.cache = {}
@@ -18,8 +19,8 @@ class MizuhoCurrencyRate:
 
     assert src == 'USD'
     assert dest == 'JPY'
-    urlPattern = \
-      'https://www.mizuhobank.co.jp/rate/market/quote/data/quote_{0}.txt'
+    urlPattern = 'https://www.mizuhobank.co.jp/rate/market/' \
+                 'quote/data/quote_{0}.txt'
     while True:
       url = urlPattern.format(date.strftime('%Y%m%d'))
       response = requests.get(url)
