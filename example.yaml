@@ -1,0 +1,10 @@
+Currency: USD
+Transactions:
+  - Date: 2013-02-04
+    Type: buy
+    NumShares: 4
+    MarketValue: 221.42
+  - Date: 2013-05-04
+    Type: buy
+    NumShares: 6
+    MarketValue: 309.18
