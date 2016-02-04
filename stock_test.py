@@ -76,6 +76,14 @@ class PurchaseReportTest(TestCase):
     report = PurchaseReport(tx, 5, 'USD')
     assert report.transferIncomeInJPY() == 0
 
+  def testNumSharesDiff(self):
+    tx = Transaction({'Date': datetime.date(2014, 1, 25),
+                      'Type': 'buy',
+                      'NumShares': 4,
+                      'MarketValue': 12})
+    report = PurchaseReport(tx, 5, 'USD')
+    assert report.numSharesDiff() == 4
+
   def testToString(self):
     tx = Transaction({'Date': datetime.date(2014, 1, 25),
                       'Type': 'buy',
@@ -112,6 +120,15 @@ class TransferReportTest(TestCase):
                       'MarketValue': 12})
     report = TransferReport(tx, 5, 44, 'USD')
     assert report.transferIncomeInJPY() == 64
+
+  def testNumSharesDiff(self):
+    tx = Transaction({'Date': datetime.date(2014, 1, 25),
+                      'Type': 'sell',
+                      'NumShares': 4,
+                      'MarketValue': 12})
+    report = TransferReport(tx, 5, 44, 'USD')
+    assert report.numSharesDiff() == -4
+
 
   def testToString(self):
     tx = Transaction({'Date': datetime.date(2014, 1, 25),
