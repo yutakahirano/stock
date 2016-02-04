@@ -11,7 +11,7 @@ class TransactionTest(TestCase):
     txb = Transaction({'Date': datetime.date(2014, 1, 25),
                        'Type': 'buy',
                        'NumShares': '4',
-                      'MarketValue': '12'})
+                       'MarketValue': '12'})
 
     assert txb.date == datetime.date(2014, 1, 25)
     assert txb.type == Transaction.buy
@@ -21,12 +21,22 @@ class TransactionTest(TestCase):
     txs = Transaction({'Date': datetime.date(2015, 1, 1),
                        'Type': 'sell',
                        'NumShares': 99,
-                      'MarketValue': 2})
+                       'MarketValue': 2})
 
     assert txs.date == datetime.date(2015, 1, 1)
     assert txs.type == Transaction.sell
     assert txs.numShares == 99
     assert txs.marketValue == 2
+
+    txe = Transaction({'Date': datetime.date(2015, 1, 1),
+                       'Type': 'convert',
+                       'NumShares': 99,
+                       'MarketValue': 2})
+
+    assert txe.date == datetime.date(2015, 1, 1)
+    assert txe.type == Transaction.convert
+    assert txe.numShares == 99
+    assert txe.marketValue == 2
 
 
 class TransactionsTest(TestCase):
@@ -57,7 +67,7 @@ class PurchaseReportTest(TestCase):
                       'MarketValue': 12})
     report = PurchaseReport(tx, 5, 'USD')
     assert report.transaction is tx
-    assert report.ttm == 5
+    assert report.tts == 5
     assert report.currency == 'USD'
 
   def testEarnedIncomeInJPY(self):
@@ -102,7 +112,7 @@ class TransferReportTest(TestCase):
                       'MarketValue': 12})
     report = TransferReport(tx, 5, 44, 'USD')
     assert report.transaction is tx
-    assert report.tts == 5
+    assert report.ttb == 5
     assert report.currency == 'USD'
 
   def testEarnedIncomeInJPY(self):
@@ -129,7 +139,6 @@ class TransferReportTest(TestCase):
     report = TransferReport(tx, 5, 44, 'USD')
     assert report.numSharesDiff() == -4
 
-
   def testToString(self):
     tx = Transaction({'Date': datetime.date(2014, 1, 25),
                       'Type': 'sell',
@@ -143,22 +152,72 @@ class TransferReportTest(TestCase):
     assert report.transferIncomeInJPY() == 64
 
 
+class ConvertReportTest(TestCase):
+  def testCreate(self):
+    tx = Transaction({'Date': datetime.date(2014, 1, 25),
+                      'Type': 'convert',
+                      'NumShares': 4,
+                      'MarketValue': 12})
+    report = ConvertReport(tx, 5, 44, 'USD')
+    assert report.transaction is tx
+    assert report.ttb == 5
+    assert report.currency == 'USD'
+
+  def testEarnedIncomeInJPY(self):
+    tx = Transaction({'Date': datetime.date(2014, 1, 25),
+                      'Type': 'convert',
+                      'NumShares': 4,
+                      'MarketValue': 12})
+    report = ConvertReport(tx, 5, 44, 'USD')
+    assert report.earnedIncomeInJPY() == 0
+
+  def testTransferIncomeInJPY(self):
+    tx = Transaction({'Date': datetime.date(2014, 1, 25),
+                      'Type': 'convert',
+                      'NumShares': 4,
+                      'MarketValue': 12})
+    report = ConvertReport(tx, 5, 44, 'USD')
+    assert report.transferIncomeInJPY() == 64
+
+  def testNumSharesDiff(self):
+    tx = Transaction({'Date': datetime.date(2014, 1, 25),
+                      'Type': 'convert',
+                      'NumShares': 4,
+                      'MarketValue': 12})
+    report = ConvertReport(tx, 5, 44, 'USD')
+    assert report.numSharesDiff() == 0
+
+  def testToString(self):
+    tx = Transaction({'Date': datetime.date(2014, 1, 25),
+                      'Type': 'convert',
+                      'NumShares': 4,
+                      'MarketValue': 12})
+    report = ConvertReport(tx, 5, 44, 'USD')
+    s = str(report)
+    assert (s == '2014-01-25: CONVERT 4 shares at 4 * 12.0 = USD48.0 = '
+                 'JPY240.0. The purchase price per share is JPY44 and the '
+                 'transfer income is JPY64.0.')
+    assert report.transferIncomeInJPY() == 64
+
+
 class FakeExchanger:
   def rate(self, src, dest, d):
     if d == date(2013, 1, 4):
-      return {'TTM': 20, 'TTS': 30}
+      return {'TTB': 20, 'TTS': 30}
     if d == date(2013, 1, 10):
-      return {'TTM': 20, 'TTS': 30}
+      return {'TTB': 20, 'TTS': 30}
     if d == date(2013, 2, 24):
-      return {'TTM': 10, 'TTS': 20}
+      return {'TTB': 10, 'TTS': 20}
     if d == date(2013, 4, 2):
-      return {'TTM': 10, 'TTS': 20}
+      return {'TTB': 10, 'TTS': 20}
     if d == date(2013, 9, 2):
-      return {'TTM': 30, 'TTS': 40}
+      return {'TTB': 30, 'TTS': 40}
+    if d == date(2013, 12, 2):
+      return {'TTB': 30, 'TTS': 40}
     if d == date(2014, 2, 2):
-      return {'TTM': 10, 'TTS': 20}
+      return {'TTB': 10, 'TTS': 20}
     if d == date(2014, 3, 2):
-      return {'TTM': 30, 'TTS': 40}
+      return {'TTB': 30, 'TTS': 40}
     assert False
 
 
@@ -187,6 +246,10 @@ Transactions:
     MarketValue: 15
     NumShares: 3
     Type: buy
+  - Date: 2013-12-02
+    MarketValue: 15
+    NumShares: 5
+    Type: convert
   - Date: 2014-02-02
     MarketValue: 1
     NumShares: 1
@@ -199,20 +262,22 @@ Transactions:
     rs = reports(Transactions(yaml.load(input)), FakeExchanger())
     assert len(rs) == 2
 
-    assert len(rs[2013]) == 5
-    assert rs[2013][0].earnedIncomeInJPY() == 1000
+    assert len(rs[2013]) == 6
+    assert rs[2013][0].earnedIncomeInJPY() == 1500
     assert rs[2013][0].transferIncomeInJPY() == 0
-    assert rs[2013][1].earnedIncomeInJPY() == 240
+    assert rs[2013][1].earnedIncomeInJPY() == 360
     assert rs[2013][1].transferIncomeInJPY() == 0
     assert rs[2013][2].earnedIncomeInJPY() == 0
-    assert rs[2013][2].transferIncomeInJPY() == -13
+    assert rs[2013][2].transferIncomeInJPY() == -420
     assert rs[2013][3].earnedIncomeInJPY() == 0
-    assert rs[2013][3].transferIncomeInJPY() == 387
-    assert rs[2013][4].earnedIncomeInJPY() == 1350
+    assert rs[2013][3].transferIncomeInJPY() == -220
+    assert rs[2013][4].earnedIncomeInJPY() == 1800
     assert rs[2013][4].transferIncomeInJPY() == 0
+    assert rs[2013][5].earnedIncomeInJPY() == 0
+    assert rs[2013][5].transferIncomeInJPY() == -170
 
     assert len(rs[2014]) == 2
     assert rs[2014][0].earnedIncomeInJPY() == 0
-    assert rs[2014][0].transferIncomeInJPY() == -332
-    assert rs[2014][1].earnedIncomeInJPY() == 540
+    assert rs[2014][0].transferIncomeInJPY() == -590
+    assert rs[2014][1].earnedIncomeInJPY() == 720
     assert rs[2014][1].transferIncomeInJPY() == 0
