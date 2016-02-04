@@ -200,29 +200,28 @@ class ConvertReportTest(TestCase):
     assert report.transferIncomeInJPY() == 64
 
 
-class FakeExchanger:
-  def rate(self, src, dest, d):
-    if d == date(2013, 1, 4):
-      return {'TTB': 20, 'TTS': 30}
-    if d == date(2013, 1, 10):
-      return {'TTB': 20, 'TTS': 30}
-    if d == date(2013, 2, 24):
-      return {'TTB': 10, 'TTS': 20}
-    if d == date(2013, 4, 2):
-      return {'TTB': 10, 'TTS': 20}
-    if d == date(2013, 9, 2):
-      return {'TTB': 30, 'TTS': 40}
-    if d == date(2013, 12, 2):
-      return {'TTB': 30, 'TTS': 40}
-    if d == date(2014, 2, 2):
-      return {'TTB': 10, 'TTS': 20}
-    if d == date(2014, 3, 2):
-      return {'TTB': 30, 'TTS': 40}
-    assert False
-
-
 class IntegrationTest(TestCase):
   def testReports(self):
+    class FakeExchanger:
+      def rate(self, src, dest, d):
+        if d == date(2013, 1, 4):
+          return {'TTB': 20, 'TTS': 30}
+        if d == date(2013, 1, 10):
+          return {'TTB': 20, 'TTS': 30}
+        if d == date(2013, 2, 24):
+          return {'TTB': 10, 'TTS': 20}
+        if d == date(2013, 4, 2):
+          return {'TTB': 10, 'TTS': 20}
+        if d == date(2013, 9, 2):
+          return {'TTB': 30, 'TTS': 40}
+        if d == date(2013, 12, 2):
+          return {'TTB': 30, 'TTS': 40}
+        if d == date(2014, 2, 2):
+          return {'TTB': 10, 'TTS': 20}
+        if d == date(2014, 3, 2):
+          return {'TTB': 30, 'TTS': 40}
+        assert False
+
     input = '''\
 Currency: USD
 Transactions:
@@ -259,6 +258,7 @@ Transactions:
     NumShares: 1
     Type: buy
 '''
+
     rs = reports(Transactions(yaml.load(input)), FakeExchanger())
     assert len(rs) == 2
 
@@ -281,3 +281,52 @@ Transactions:
     assert rs[2014][0].transferIncomeInJPY() == -590
     assert rs[2014][1].earnedIncomeInJPY() == 720
     assert rs[2014][1].transferIncomeInJPY() == 0
+
+  def testPWCCase(self):
+    class FakeExchanger:
+      def rate(self, src, dest, d):
+        if d == date(2014, 7, 28):
+          return {'TTB': -100000, 'TTS': 102.79}
+        if d == date(2015, 1, 23):
+          return {'TTB': 117.53, 'TTS': -100000}
+        if d == date(2015, 1, 26):
+          return {'TTB': -100000, 'TTS': 118.67}
+        if d == date(2015, 3, 25):
+          return {'TTB': 118.82, 'TTS': -100000}
+        assert False
+
+    input = '''\
+Currency: USD
+Transactions:
+  - Date: 2014-07-28
+    Type: buy
+    NumShares: 30
+    MarketValue: 588.63
+  - Date: 2015-01-23
+    Type: sell
+    NumShares: 20
+    MarketValue: 537.59
+  - Date: 2015-01-26
+    Type: buy
+    NumShares: 60
+    MarketValue: 534.34
+  - Date: 2015-03-25
+    Type: sell
+    NumShares: 10
+    MarketValue: 565.50
+'''
+    rs = reports(Transactions(yaml.load(input)), FakeExchanger())
+    assert len(rs) == 2
+    print(rs[2014][0].earnedIncomeInJPY())
+    print(rs[2015][2].transferIncomeInJPY())
+    assert len(rs[2014]) == 1
+    assert rs[2014][0].earnedIncomeInJPY() == 1815159
+    assert rs[2014][0].transferIncomeInJPY() == 0
+
+    assert len(rs[2015]) == 3
+    assert rs[2015][0].earnedIncomeInJPY() == 0
+    assert rs[2015][0].transferIncomeInJPY() == 53554  # Should be 53559?
+    assert rs[2015][1].earnedIncomeInJPY() == 3804608  # Shuold be 3804600?
+    assert rs[2015][1].transferIncomeInJPY() == 0
+    assert rs[2015][2].earnedIncomeInJPY() == 0
+    assert rs[2015][2].transferIncomeInJPY() == 41976  # Should be 41976?
