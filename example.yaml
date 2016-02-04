@@ -8,3 +8,27 @@ Transactions:
     Type: buy
     NumShares: 6
     MarketValue: 309.18
+  - Date: 2013-06-08
+    Type: sell
+    NumShares: 4
+    MarketValue: 101.42
+  - Date: 2013-06-12
+    Type: sell
+    NumShares: 1
+    MarketValue: 2309.18
+  - Date: 2013-12-12
+    Type: buy
+    NumShares: 12
+    MarketValue: 109.18
+  - Date: 2014-02-12
+    Type: sell
+    NumShares: 5
+    MarketValue: 309.18
+  - Date: 2014-02-13
+    Type: buy
+    NumShares: 8
+    MarketValue: 322.4
+  - Date: 2014-05-13
+    Type: buy
+    NumShares: 4
+    MarketValue: 422.4
