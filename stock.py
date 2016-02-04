@@ -62,6 +62,9 @@ class PurchaseReport:
   def transferIncomeInJPY(self):
     return 0.0
 
+  def numSharesDiff(self):
+    return self.transaction.numShares
+
 class TransferReport:
   def __init__(self, transaction, tts, purchasePricePerShare, currency):
     self.transaction = transaction
@@ -89,6 +92,9 @@ class TransferReport:
     tx = self.transaction
     purchasePrice = tx.numShares * self.purchasePricePerShareInJPY
     return math.ceil(tx.numShares * tx.marketValue * self.tts - purchasePrice)
+
+  def numSharesDiff(self):
+    return -self.transaction.numShares
 
 def load(filename):
   with open(filename, 'r') as f:
@@ -128,6 +134,7 @@ def reports(transactions, exchanger):
 
 def report(transactions, exchanger):
   print('===')
+  numShares = 0
   for year, xs in sorted(reports(transactions, exchanger).items()):
     earnedIncomeInJPY = 0
     transferIncomeInJPY = 0
@@ -135,7 +142,10 @@ def report(transactions, exchanger):
       print(report)
       earnedIncomeInJPY += report.earnedIncomeInJPY()
       transferIncomeInJPY += report.transferIncomeInJPY()
+      numShares += report.numSharesDiff()
 
     print('{0}: The earned income is JPY{1}, the transfer income is JPY{2}.'
       .format(year, earnedIncomeInJPY, transferIncomeInJPY))
+    print('{0}: You have {1} shares at the end of year.'.format(
+      year, numShares))
     print('====')
