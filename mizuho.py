@@ -31,10 +31,10 @@ class MizuhoCurrencyRate:
       # Unfortunately, the server doesn't return the correct encoding.
       response.encoding = 'SHIFT-JIS'
       for line in response.text.split('\n'):
-        pattern = re.compile(r'^米ドル +USD +(\d+\.\d*) +(\d+\.\d*) +\d+\.\d*')
+        pattern = re.compile(r'^米ドル +USD +(\d+\.\d*) +\d+\.\d* +(\d+\.\d*)')
         m = pattern.match(line)
         if m:
-          value = {'TTS': float(m.group(1)), 'TTB': float(m.group(2))}
+          value = {'TTS': float(m.group(1)), 'TTM': float(m.group(2))}
           self.cache[key] = value
           return value
       assert False, 'Should never reach.'

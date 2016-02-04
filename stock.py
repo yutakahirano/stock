@@ -38,13 +38,13 @@ class Context:
     self.exchanger = mizuho.MizuhoCurrencyRate()
 
 class PurchaseReport:
-  def __init__(self, transaction, ttb, currency):
+  def __init__(self, transaction, ttm, currency):
     self.transaction = transaction
-    self.ttb = ttb
+    self.ttm = ttm
     self.currency = currency
 
   def __str__(self):
-    return ('{0}: BUY {1} shares by {1} * {2} = {3}{4} = JPY{5}.'
+    return ('{0}: BUY {1} shares at {1} * {2} = {3}{4} = JPY{5}.'
       .format(self.transaction.date,
               self.transaction.numShares,
               self.transaction.marketValue,
@@ -54,7 +54,7 @@ class PurchaseReport:
 
   def valueInJPY(self):
     tx = self.transaction
-    return math.ceil(tx.numShares * tx.marketValue * self.ttb)
+    return math.ceil(tx.numShares * tx.marketValue * self.ttm)
 
   def earnedIncomeInJPY(self):
     return self.valueInJPY()
@@ -71,7 +71,7 @@ class TransferReport:
 
   def __str__(self):
     tx = self.transaction
-    return ('{0}: SELL {1} shares by {1} * {2} = {3}{4} = JPY{5}. The purchase '
+    return ('{0}: SELL {1} shares at {1} * {2} = {3}{4} = JPY{5}. The purchase '
             'price per share is JPY{6} and the transfer income is JPY{7}.'
       .format(tx.date,
               tx.numShares,
@@ -109,15 +109,15 @@ def reports(transactions, exchanger):
       reports[tx.date.year] = []
 
     rate = exchanger.rate(currency, 'JPY', tx.date)
-    ttb = rate['TTB']
+    ttm = rate['TTM']
     tts = rate['TTS']
 
     average = totalValue / numShares if numShares > 0 else 0.0
     if tx.type is Transaction.buy:
-       reports[tx.date.year].append(PurchaseReport(tx, ttb, currency))
+       reports[tx.date.year].append(PurchaseReport(tx, ttm, currency))
 
        numShares += tx.numShares
-       totalValue += math.ceil(tx.numShares * tx.marketValue * ttb)
+       totalValue += math.ceil(tx.numShares * tx.marketValue * ttm)
     else:
        assert tx.type is Transaction.sell
        reports[tx.date.year].append(TransferReport(tx, tts, average, currency))

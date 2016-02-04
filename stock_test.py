@@ -56,7 +56,7 @@ class PurchaseReportTest(TestCase):
                       'MarketValue': 12})
     report = PurchaseReport(tx, 5, 'USD')
     assert report.transaction is tx
-    assert report.ttb == 5
+    assert report.ttm == 5
     assert report.currency == 'USD'
 
   def testEarnedIncomeInJPY(self):
@@ -82,7 +82,7 @@ class PurchaseReportTest(TestCase):
                       'MarketValue': 12})
     report = PurchaseReport(tx, 5, 'USD')
     s = str(report)
-    assert s == '2014-01-25: BUY 4 shares by 4 * 12.0 = USD48.0 = JPY240.0.'
+    assert s == '2014-01-25: BUY 4 shares at 4 * 12.0 = USD48.0 = JPY240.0.'
 
 
 class TransferReportTest(TestCase):
@@ -119,7 +119,7 @@ class TransferReportTest(TestCase):
                       'MarketValue': 12})
     report = TransferReport(tx, 5, 44, 'USD')
     s = str(report)
-    assert (s == '2014-01-25: SELL 4 shares by 4 * 12.0 = USD48.0 = JPY240.0. '
+    assert (s == '2014-01-25: SELL 4 shares at 4 * 12.0 = USD48.0 = JPY240.0. '
       'The purchase price per share is JPY44 and the transfer income is '
       'JPY64.0.')
     assert report.transferIncomeInJPY() == 64
@@ -127,19 +127,19 @@ class TransferReportTest(TestCase):
 class FakeExchanger:
   def rate(self, src, dest, d):
     if d == date(2013, 1, 4):
-      return {'TTB': 20, 'TTS': 30}
+      return {'TTM': 20, 'TTS': 30}
     if d == date(2013, 1, 10):
-      return {'TTB': 20, 'TTS': 30}
+      return {'TTM': 20, 'TTS': 30}
     if d == date(2013, 2, 24):
-      return {'TTB': 10, 'TTS': 20}
+      return {'TTM': 10, 'TTS': 20}
     if d == date(2013, 4, 2):
-      return {'TTB': 10, 'TTS': 20}
+      return {'TTM': 10, 'TTS': 20}
     if d == date(2013, 9, 2):
-      return {'TTB': 30, 'TTS': 40}
+      return {'TTM': 30, 'TTS': 40}
     if d == date(2014, 2, 2):
-      return {'TTB': 10, 'TTS': 20}
+      return {'TTM': 10, 'TTS': 20}
     if d == date(2014, 3, 2):
-      return {'TTB': 30, 'TTS': 40}
+      return {'TTM': 30, 'TTS': 40}
     assert False
 
 
@@ -178,7 +178,6 @@ Transactions:
     Type: buy
 '''
     rs = reports(Transactions(yaml.load(input)), FakeExchanger())
-    print(rs[2013][2].transferIncomeInJPY())
     assert len(rs) == 2
  
     assert len(rs[2013]) == 5
