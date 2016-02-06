@@ -40,27 +40,30 @@ class Transactions:
 
 
 class PurchaseReport:
-  def __init__(self, transaction, tts, currency):
+  def __init__(self, transaction, rate, currency):
     assert transaction.type is Transaction.buy
     self.transaction = transaction
-    self.tts = tts
+    self.rate = rate
     self.currency = currency
 
   def __str__(self):
-    return '{0}: BUY {1} shares at {1} * {2} = {3}{4} = JPY{5}.'.format(
+    return ('{0}: BUY {1} shares at {1} * {2} = {3}{4} = '
+            'JPY{5} from JPY{6} earnings.').format(
       self.transaction.date,
       self.transaction.numShares,
       self.transaction.marketValue,
       self.currency,
       self.transaction.numShares * self.transaction.marketValue,
-      self.valueInJPY())
-
-  def valueInJPY(self):
-    tx = self.transaction
-    return math.ceil(tx.numShares * tx.marketValue * self.tts)
+      self.acquisitionFeeInJPY(),
+      self.earnedIncomeInJPY())
 
   def earnedIncomeInJPY(self):
-    return self.valueInJPY()
+    tx = self.transaction
+    return math.ceil(tx.numShares * tx.marketValue * self.rate['TTM'])
+
+  def acquisitionFeeInJPY(self):
+    tx = self.transaction
+    return math.ceil(tx.numShares * tx.marketValue * self.rate['TTS'])
 
   def transferIncomeInJPY(self):
     return 0.0
@@ -91,6 +94,9 @@ class TransferReport:
                                 self.transferIncomeInJPY()))
 
   def earnedIncomeInJPY(self):
+    return 0.0
+
+  def acquisitionFeeInJPY(self):
     return 0.0
 
   def transferIncomeInJPY(self):
@@ -126,6 +132,9 @@ class ConvertReport:
   def earnedIncomeInJPY(self):
     return 0.0
 
+  def acquisitionFeeInJPY(self):
+    return 0.0
+
   def transferIncomeInJPY(self):
     tx = self.transaction
     purchasePrice = tx.numShares * self.purchasePricePerShareInJPY
@@ -157,12 +166,13 @@ def reports(transactions, exchanger):
     ttb = rate['TTB']
     tts = rate['TTS']
 
-    average = totalValue / numShares if numShares > 0 else 0.0
+    average = math.ceil(totalValue / numShares) if numShares > 0 else 0.0
     if tx.type is Transaction.buy:
-       reports[tx.date.year].append(PurchaseReport(tx, tts, currency))
+       report = PurchaseReport(tx, rate, currency)
+       reports[tx.date.year].append(report)
 
        numShares += tx.numShares
-       totalValue += math.ceil(tx.numShares * tx.marketValue * tts)
+       totalValue += report.acquisitionFeeInJPY()
     elif tx.type is Transaction.sell:
        reports[tx.date.year].append(TransferReport(tx, ttb, average, currency))
 
@@ -173,8 +183,8 @@ def reports(transactions, exchanger):
        report = ConvertReport(tx, ttb, average, currency)
        reports[tx.date.year].append(report)
        totalValue -= tx.numShares * average
-       totalValue += tx.numShares * tx.marketValue * tts
-       totalValue = math.ceil(totalValue)
+       totalValue += math.ceil(tx.numShares * tx.marketValue * tts)
+       assert totalValue == math.ceil(totalValue)
 
   return reports
 

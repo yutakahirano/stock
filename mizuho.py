@@ -9,9 +9,9 @@ class MizuhoCurrencyRate:
     self.cache = {}
 
   # Returns the price of the unit of |src| currency in |dest| currency at a
-  # certain time. The return value is a pair consisting of TTB and TTS.
-  # Example: If 1 USD = 111.5 JPY (TTS) and 110.5 JPY(TTB), return
-  # {'TTB': 110.5, 'TTS': 111.5}
+  # certain time. The return value is a tuple consisting of TTB, TTM and TTS.
+  # Example: If 1 USD = 111.5 JPY (TTS), 110.0 JPY(TTM) and 110.5 JPY(TTB),
+  # return {'TTB': 110.5, 'TTM': 110.0, 'TTS': 111.5}
   def rate(self, src, dest, date):
     key = (src, dest, date)
     if key in self.cache:
@@ -32,10 +32,13 @@ class MizuhoCurrencyRate:
       # Unfortunately, the server doesn't return the correct encoding.
       response.encoding = 'SHIFT-JIS'
       for line in response.text.split('\n'):
-        pattern = re.compile(r'^米ドル +USD +(\d+\.\d*) +(\d+\.\d*) +\d+\.\d*')
+        pattern = re.compile(
+          r'^米ドル +USD +(\d+\.\d*) +(\d+\.\d*) +(\d+\.\d*)')
         m = pattern.match(line)
         if m:
-          value = {'TTS': float(m.group(1)), 'TTB': float(m.group(2))}
+          value = {'TTS': float(m.group(1)),
+                   'TTB': float(m.group(2)),
+                   'TTM': float(m.group(3))}
           self.cache[key] = value
           return value
       assert False, 'Should never reach.'
